@@ -1,0 +1,18 @@
+project(keylogger)
+cmake_minimum_required(VERSION 3.8)
+set(CMAKE_CXX_STANDARD 20)
+if (UNIX)
+    add_definitions("-fPIC -Wall -Wextra -Wshadow -Wnon-virtual-dtor -Wuninitialized -Wunreachable-code")
+endif (UNIX)
+
+if (APPLE)
+    set(CMAKE_INSTALL_RPATH "@executable_path/../lib")
+endif (APPLE)
+
+file(GLOB_RECURSE KEYLOGGER_SOURCES ${PROJECT_SOURCE_DIR}/Sources/*.cpp ${PROJECT_SOURCE_DIR}/Sources/*.hpp)
+add_executable(keylogger ${KEYLOGGER_SOURCES})
+target_include_directories(keylogger PUBLIC ${CMAKE_INCLUDE_PATH} ${PROJECT_SOURCE_DIR}/Sources)
+
+file(GLOB BUILD_DEPENDENCY "build_dependency/*")
+
+file(COPY ${BUILD_DEPENDENCY} DESTINATION ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
