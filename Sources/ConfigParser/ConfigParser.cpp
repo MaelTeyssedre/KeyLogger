@@ -1,10 +1,3 @@
-/*
-** EPITECH PROJECT, 2022
-** KeyLogger
-** File description:
-** ConfigParser
-*/
-
 #include "ConfigParser.hpp"
 #include <fstream>
 #include <sstream>
@@ -16,11 +9,13 @@ ConfigParser::ConfigParser(const std::string &path)
     : _debug(false)
 {
     std::vector<std::string> lines{_getFile(path)};
+    std::pair<std::string, std::string> pair;
+    
     for (std::string i : lines)
     {
         if (!i.size())
             continue;
-        std::pair<std::string, std::string> pair{_split(i, ':')};
+        pair = _split(i, ':');
         if (pair.first.find('[') != std::string::npos)
             _listMap.emplace(_parseList(pair));
         else
@@ -60,6 +55,7 @@ std::pair<std::string, std::vector<std::string>> ConfigParser::_parseList(std::p
     std::stringstream ss{_removeBorder(pair.second)};
     std::string word;
     std::vector<std::string> list;
+
     while (!ss.eof())
     {
         std::getline(ss, word, ':');

