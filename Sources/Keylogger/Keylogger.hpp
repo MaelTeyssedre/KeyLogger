@@ -2,15 +2,23 @@
 #define KEYLOGGER_HPP_
 
 #include <string>
+#include <vector>
 
-
-class Keylogger
+namespace kl
 {
-public:
-    Keylogger(std::string &outputPath);
-    virtual ~Keylogger() = default;
-private:
-    std::string _output;
-};
+
+    class Keylogger
+    {
+    public:
+        Keylogger(std::string output, bool debug, std::vector<std::string> inputDir);
+        virtual ~Keylogger() = default;
+    private:
+        void _findInputFile(const std::vector<std::string> &);
+    private:
+        std::string _output;
+        bool _debug;
+        std::string _input;
+    };
+}
 
 #endif /* !KEYLOGGER_HPP_ */

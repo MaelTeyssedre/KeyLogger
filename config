@@ -1,0 +1,3 @@
+output:output.txt
+[input repertories]:[/dev/input]
+debug:true
