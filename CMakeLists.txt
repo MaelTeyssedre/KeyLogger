@@ -5,9 +5,9 @@ if (UNIX)
     add_definitions("-fPIC -Wall -Wextra -Wshadow -Wnon-virtual-dtor -Wuninitialized -Wunreachable-code")
 endif (UNIX)
 
-if (APPLE)
-    set(CMAKE_INSTALL_RPATH "@executable_path/../lib")
-endif (APPLE)
+# if (APPLE)
+#     set(CMAKE_INSTALL_RPATH "@executable_path/../lib")
+# endif (APPLE)
 
 file(GLOB_RECURSE KEYLOGGER_SOURCES ${PROJECT_SOURCE_DIR}/Sources/*.cpp ${PROJECT_SOURCE_DIR}/Sources/*.hpp)
 add_executable(keylogger ${KEYLOGGER_SOURCES})
