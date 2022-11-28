@@ -1,5 +1,5 @@
 # KeyLogger
-C++ keylogger
+C++ linux keylogger
 
 ## Build / Clean
 
